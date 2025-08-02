@@ -27,7 +27,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
-testpaths = ["tests"]
+testpaths = ["test"]
 
 [tool.black]
 line-length = 88

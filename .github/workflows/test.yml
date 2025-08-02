@@ -28,11 +28,13 @@ jobs:
         run: black --check src/ test/
 
   test:
-    runs-on: ubuntu-latest
+    name: Run tests
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         python-version: [3.11, 3.12, 3.13]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v3

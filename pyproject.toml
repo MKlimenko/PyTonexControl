@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyTonexControl"
+version = "0.1.0"
+description = "A python package to control ToneX One pedal"
+authors = [
+    { name = "Michael Klimenko", email = "mklimenko29@gmail.com" }
+]
+license = {text = "Apache License (2.0)"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0.0",
+    "pyserial==3.*"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MKlimenko/PyTonexControl"
+"Bug Tracker" = "https://github.com/MKlimenko/PyTonexControl/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | build
+  | dist
+  | \.venv
+  | .*egg-info
+)/
+'''
+

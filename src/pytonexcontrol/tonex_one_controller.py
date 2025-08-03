@@ -306,6 +306,43 @@ class TonexOneController:
         dst += bytearray([0x7E])
         return dst
 
+    def remove_framing(self, framed_message):
+        if (
+            len(framed_message) < 4
+            or framed_message[0] != 0x7E
+            or framed_message[-1] != 0x7E
+        ):
+            raise ValueError(
+                "Invalid framing: too short or missing start/end delimiter."
+            )
+        stripped = framed_message[1:-1]
+
+        unescaped = bytearray()
+        i = 0
+        while i < len(stripped):
+            if stripped[i] == 0x7D:
+                if i + 1 >= len(stripped):
+                    raise ValueError("Invalid escape sequence at end of message.")
+                unescaped.append(stripped[i + 1] ^ 0x20)
+                i += 2
+            else:
+                unescaped.append(stripped[i])
+                i += 1
+
+        if len(unescaped) < 2:
+            raise ValueError("Message too short to contain CRC.")
+
+        payload = unescaped[:-2]
+        received_crc = int.from_bytes(unescaped[-2:], byteorder="little")
+
+        computed_crc = self.crc16(payload)
+        if computed_crc != received_crc:
+            raise ValueError(
+                f"CRC mismatch: expected {received_crc:#04x}, got {computed_crc:#04x}"
+            )
+
+        return payload
+
     def prepare_message_single_parameter(self, index, value):
         if type(index) is TonexParam:
             min_val, max_val = TonexParamRanges[index]
@@ -390,10 +427,8 @@ class TonexOneController:
         # fmt: on
         framed = self.add_framing(hello_request)
         self.ser.write(framed)
-        import time
-
-        time.sleep(0.1)
-        dst = self.ser.read_all()
+        dst = self.ser.read_until(bytes([0x7E]))
+        dst += self.ser.read_until(bytes([0x7E]))
         print(dst)
 
 

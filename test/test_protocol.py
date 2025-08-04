@@ -1,4 +1,5 @@
 import pytonexcontrol
+import random
 
 
 def test_noise_gate_on():
@@ -25,5 +26,16 @@ def test_noise_gate_off():
     # fmt: on
 
 
+def test_deframe():
+    controller = pytonexcontrol.TonexOneController()
+    rng = random.Random(81373)
+    data = bytearray(rng.getrandbits(8) for _ in range(20))
+    data[1] = 0x7E
+    framed = controller.add_framing(data)
+    assert len(framed) == len(data) + 4 + data.count(0x7E)
+    deframed = controller.remove_framing(framed)
+    assert deframed == data
+
+
 if __name__ == "__main__":
-    test_noise_gate_on()
+    test_deframe()

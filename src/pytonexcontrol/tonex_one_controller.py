@@ -11,7 +11,8 @@ PRODUCT_ID = 0x00D1
 class TonexPreset(IntEnum):
     A = (auto(),)
     B = (auto(),)
-    Stomp = auto()
+    Stomp = (auto(),)
+    Bypass = auto()
 
 
 class TonexParam(IntEnum):
@@ -282,6 +283,15 @@ class TonexOneController:
                 pass
             self.ser = None
 
+    def write(self, message):
+        dst = bytearray([0xAA])
+        while len(dst) != 0:
+            dst = self.ser.read_all()
+        self.ser.write(message)
+        dst = self.ser.read_until(bytes([0x7E]))
+        dst += self.ser.read_until(bytes([0x7E]))
+        return dst
+
     def crc16(self, data: bytes) -> int:
         crc = 0xFFFF
         cnt = 0
@@ -305,6 +315,43 @@ class TonexOneController:
         dst += bytearray(crc)
         dst += bytearray([0x7E])
         return dst
+
+    def remove_framing(self, framed_message):
+        if (
+            len(framed_message) < 4
+            or framed_message[0] != 0x7E
+            or framed_message[-1] != 0x7E
+        ):
+            raise ValueError(
+                "Invalid framing: too short or missing start/end delimiter."
+            )
+        stripped = framed_message[1:-1]
+
+        unescaped = bytearray()
+        i = 0
+        while i < len(stripped):
+            if stripped[i] == 0x7D:
+                if i + 1 >= len(stripped):
+                    raise ValueError("Invalid escape sequence at end of message.")
+                unescaped.append(stripped[i + 1] ^ 0x20)
+                i += 2
+            else:
+                unescaped.append(stripped[i])
+                i += 1
+
+        if len(unescaped) < 2:
+            raise ValueError("Message too short to contain CRC.")
+
+        payload = unescaped[:-2]
+        received_crc = int.from_bytes(unescaped[-2:], byteorder="little")
+
+        computed_crc = self.crc16(payload)
+        if computed_crc != received_crc:
+            raise ValueError(
+                f"CRC mismatch: expected {received_crc:#04x}, got {computed_crc:#04x}"
+            )
+
+        return payload
 
     def prepare_message_single_parameter(self, index, value):
         if type(index) is TonexParam:
@@ -334,7 +381,7 @@ class TonexOneController:
 
     def send_single_parameter(self, index, value):
         message = self.prepare_message_single_parameter(index, value)
-        self.ser.write(message)
+        self.write(message)
 
     def send_preset(self, preset):
         # fmt: off
@@ -380,21 +427,35 @@ class TonexOneController:
                 0xFB, 0xC9, 0x7E])
         }
         # fmt: on
-        self.ser.write(presets[preset])
+        self.write(presets[preset])
+
+    def set_preset(self, preset):
+        self.ser.read_all()
+        cur_state = self.read_state()
+        cur_state = cur_state[(len(cur_state) - cur_state[6]) :]
+
+        index = len(cur_state) - 12
+        message_len = np.uint16(len(cur_state)).tobytes()
+        # fmt: off
+        control_message = bytearray([0xb9, 0x03, 0x81, 0x06, 0x03, 0x82, message_len[0], message_len[1], 0x80, 0x0b, 0x03])
+        # fmt: on
+        cur_state[19] = 0 if (preset == TonexPreset.A or preset == TonexPreset.B) else 1
+        if preset == TonexPreset.Bypass:
+            self.set_preset(TonexPreset.Stomp)
+            cur_state[index] = 0x1
+        else:
+            cur_state[index + 1] = int(preset) - 1
+        self.write(self.add_framing(control_message + cur_state))
 
     def read_state(self):
-        dst = self.ser.read_all()
-        print(dst)
         # fmt: off
-        hello_request = bytearray([0xb9, 0x03, 0x00, 0x82, 0x06, 0x00, 0x80, 0x0b, 0x03, 0xb9, 0x02, 0x81, 0x06, 0x03, 0x0b])
+        state_request = bytearray([0xb9, 0x03, 0x00, 0x82, 0x06, 0x00, 0x80, 0x0b, 0x03, 0xb9, 0x02, 0x81, 0x06, 0x03, 0x0b])
         # fmt: on
-        framed = self.add_framing(hello_request)
-        self.ser.write(framed)
-        import time
+        framed = self.add_framing(state_request)
+        dst = self.write(framed)
 
-        time.sleep(0.1)
-        dst = self.ser.read_all()
-        print(dst)
+        deframed = self.remove_framing(dst)
+        return deframed
 
 
 def main():
@@ -404,11 +465,13 @@ def main():
         if not controller.connect():
             print("Failed to connect to device")
             return
-        controller.read_state()
-        # controller.send_preset(TonexPreset.A)
-        # controller.send_preset(TonexPreset.B)
-        # controller.send_preset(TonexPreset.Stomp)
-        # controller.send_preset(TonexPreset.A)
+        controller.send_preset(TonexPreset.A)
+        controller.send_preset(TonexPreset.B)
+        controller.send_preset(TonexPreset.Stomp)
+        controller.set_preset(TonexPreset.A)
+        controller.set_preset(TonexPreset.B)
+        controller.set_preset(TonexPreset.Stomp)
+        controller.set_preset(TonexPreset.Bypass)
 
         # controller.send_single_parameter(TonexParam.NOISE_GATE_ENABLE, 1)
         # controller.send_single_parameter(TonexParam.NOISE_GATE_ENABLE, 0)

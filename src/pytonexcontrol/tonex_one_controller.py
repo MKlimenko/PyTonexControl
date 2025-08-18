@@ -126,8 +126,6 @@ class TonexParam(IntEnum):
     DELAY_TAPE_MODE = auto()
     DELAY_TAPE_MIX = auto()
 
-    LAST = auto()
-
 
 class TonexParamStatus(IntEnum):
     Disable = 0
@@ -500,18 +498,18 @@ def main():
             print("Failed to connect to device")
             return
         controller.send_single_parameter(
-            TonexParam.REVERB_ENABLE, TonexParamStatus.Enable
+            TonexParam.MODULATION_ENABLE, TonexParamStatus.Enable
         )
-        for i in range(ReverbModel.Plate + 1):
-            print(f"Sending {ReverbModel(i).name}")
-            controller.send_single_parameter(TonexParam.REVERB_MODEL, ReverbModel(i))
-            import time
-
-            time.sleep(5)
+        for i in range(ModulationModel.Rotary + 1):
+            controller.send_single_parameter(
+                TonexParam.MODULATION_MODEL, ModulationModel(i)
+            )
         controller.send_single_parameter(
-            TonexParam.REVERB_ENABLE, TonexParamStatus.Disable
+            TonexParam.MODULATION_ENABLE, TonexParamStatus.Disable
         )
-        controller.send_single_parameter(TonexParam.REVERB_MODEL, ReverbModel.Spring1)
+        controller.send_single_parameter(
+            TonexParam.MODULATION_MODEL, ModulationModel.Chrous
+        )
 
     except Exception as e:
         print(f"Error: {str(e)}")

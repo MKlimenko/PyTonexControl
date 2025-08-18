@@ -9,9 +9,9 @@ PRODUCT_ID = 0x00D1
 
 
 class TonexPreset(IntEnum):
-    A = (auto(),)
-    B = (auto(),)
-    Stomp = (auto(),)
+    A = auto()
+    B = auto()
+    Stomp = auto()
     Bypass = auto()
 
 
@@ -126,21 +126,51 @@ class TonexParam(IntEnum):
     DELAY_TAPE_MODE = auto()
     DELAY_TAPE_MIX = auto()
 
-    LAST = auto()
+
+class TonexParamStatus(IntEnum):
+    Disable = 0
+    Enable = 1
+
+
+class ReverbModel(IntEnum):
+    Spring1 = 0
+    Spring2 = 1
+    Spring3 = 2
+    Spring4 = 3
+    Room = 4
+    Plate = 5
+
+
+class ModulationModel(IntEnum):
+    Chrous = 0
+    Tremolo = 1
+    Phaser = 2
+    Flanger = 3
+    Rotary = 4
+
+
+class DelayModel(IntEnum):
+    Digital = 0
+    Tape = 1
+
+
+class DelayMode(IntEnum):
+    Normal = 0
+    PingPong = 1
 
 
 TonexParamRanges = {
-    TonexParam.NOISE_GATE_POST: (0, 1),
-    TonexParam.NOISE_GATE_ENABLE: (0, 1),
+    TonexParam.NOISE_GATE_POST: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.NOISE_GATE_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
     TonexParam.NOISE_GATE_THRESHOLD: (-100, 0),
     TonexParam.NOISE_GATE_RELEASE: (5, 500),
     TonexParam.NOISE_GATE_DEPTH: (-100, -20),
-    TonexParam.COMP_POST: (0, 1),
-    TonexParam.COMP_ENABLE: (0, 1),
+    TonexParam.COMP_POST: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.COMP_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
     TonexParam.COMP_THRESHOLD: (-40, 0),
     TonexParam.COMP_MAKE_UP: (-30, 10),
     TonexParam.COMP_ATTACK: (1, 51),
-    TonexParam.EQ_POST: (0, 1),
+    TonexParam.EQ_POST: (TonexParamStatus.Disable, TonexParamStatus.Enable),
     TonexParam.EQ_BASS: (0, 10),
     TonexParam.EQ_BASS_FREQ: (75, 600),
     TonexParam.EQ_MID: (0, 10),
@@ -148,7 +178,7 @@ TonexParamRanges = {
     TonexParam.EQ_MID_FREQ: (150, 5000),
     TonexParam.EQ_TREBLE: (0, 10),
     TonexParam.EQ_TREBLE_FREQ: (1000, 4000),
-    TonexParam.MODEL_AMP_ENABLE: (0, 1),
+    TonexParam.MODEL_AMP_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
     TonexParam.MODEL_SW1: (0, 1),
     TonexParam.MODEL_GAIN: (0, 10),
     TonexParam.MODEL_VOLUME: (0, 10),
@@ -167,8 +197,8 @@ TonexParamRanges = {
     TonexParam.MODEL_PRESENCE: (0, 10),
     TonexParam.MODEL_DEPTH: (0, 10),
     TonexParam.REVERB_POSITION: (0, 1),
-    TonexParam.REVERB_ENABLE: (0, 1),
-    TonexParam.REVERB_MODEL: (0, 5),
+    TonexParam.REVERB_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.REVERB_MODEL: (ReverbModel.Spring1, ReverbModel.Plate),
     TonexParam.REVERB_SPRING1_TIME: (0, 10),
     TonexParam.REVERB_SPRING1_PREDELAY: (0, 500),
     TonexParam.REVERB_SPRING1_COLOR: (-10, 10),
@@ -194,9 +224,9 @@ TonexParamRanges = {
     TonexParam.REVERB_PLATE_COLOR: (-10, 10),
     TonexParam.REVERB_PLATE_MIX: (0, 100),
     # Modulation
-    TonexParam.MODULATION_POST: (0, 1),
-    TonexParam.MODULATION_ENABLE: (0, 1),
-    TonexParam.MODULATION_MODEL: (0, 4),
+    TonexParam.MODULATION_POST: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.MODULATION_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.MODULATION_MODEL: (ModulationModel.Chrous, ModulationModel.Rotary),
     TonexParam.MODULATION_CHORUS_SYNC: (0, 1),
     TonexParam.MODULATION_CHORUS_TS: (0, 17),
     TonexParam.MODULATION_CHORUS_RATE: (0.1, 10),
@@ -226,20 +256,20 @@ TonexParamRanges = {
     TonexParam.MODULATION_ROTARY_SPREAD: (0, 100),
     TonexParam.MODULATION_ROTARY_LEVEL: (0, 10),
     # Delay
-    TonexParam.DELAY_POST: (0, 1),
-    TonexParam.DELAY_ENABLE: (0, 1),
-    TonexParam.DELAY_MODEL: (0, 1),
+    TonexParam.DELAY_POST: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.DELAY_ENABLE: (TonexParamStatus.Disable, TonexParamStatus.Enable),
+    TonexParam.DELAY_MODEL: (DelayModel.Digital, DelayModel.Tape),
     TonexParam.DELAY_DIGITAL_SYNC: (0, 1),
     TonexParam.DELAY_DIGITAL_TS: (0, 17),
     TonexParam.DELAY_DIGITAL_TIME: (0, 1000),
     TonexParam.DELAY_DIGITAL_FEEDBACK: (0, 100),
-    TonexParam.DELAY_DIGITAL_MODE: (0, 1),
+    TonexParam.DELAY_DIGITAL_MODE: (DelayMode.Normal, DelayMode.PingPong),
     TonexParam.DELAY_DIGITAL_MIX: (0, 100),
     TonexParam.DELAY_TAPE_SYNC: (0, 1),
     TonexParam.DELAY_TAPE_TS: (0, 17),
     TonexParam.DELAY_TAPE_TIME: (0, 1000),
     TonexParam.DELAY_TAPE_FEEDBACK: (0, 100),
-    TonexParam.DELAY_TAPE_MODE: (0, 1),
+    TonexParam.DELAY_TAPE_MODE: (DelayMode.Normal, DelayMode.PingPong),
     TonexParam.DELAY_TAPE_MIX: (0, 100),
 }
 
@@ -355,6 +385,10 @@ class TonexOneController:
 
     def prepare_message_single_parameter(self, index, value):
         if type(index) is TonexParam:
+            if type(value) != type(TonexParamRanges[index][0]):
+                raise Exception(
+                    f"Please provide strongly typed parameter for {index.name}"
+                )
             min_val, max_val = TonexParamRanges[index]
             if value < min_val or value > max_val:
                 print(
@@ -371,9 +405,7 @@ class TonexOneController:
             0xB9, 0x04, 0x02, 0x00, 0x00,         0x88, 0x00, 0x00, 0x00, 0x00
         ])
         # fmt: on
-        print(binascii.hexlify(payload, " ").decode())
         payload[4] = np.uint16(index).tobytes()[0]
-        print(binascii.hexlify(payload, " ").decode())
 
         payload[-4:] = np.float32(value).tobytes()
         combined_message = message + payload
@@ -465,27 +497,23 @@ def main():
         if not controller.connect():
             print("Failed to connect to device")
             return
-        controller.send_preset(TonexPreset.A)
-        controller.send_preset(TonexPreset.B)
-        controller.send_preset(TonexPreset.Stomp)
-        controller.set_preset(TonexPreset.A)
-        controller.set_preset(TonexPreset.B)
-        controller.set_preset(TonexPreset.Stomp)
-        controller.set_preset(TonexPreset.Bypass)
+        controller.send_single_parameter(
+            TonexParam.MODULATION_ENABLE, TonexParamStatus.Enable
+        )
+        for i in range(ModulationModel.Rotary + 1):
+            controller.send_single_parameter(
+                TonexParam.MODULATION_MODEL, ModulationModel(i)
+            )
+        controller.send_single_parameter(
+            TonexParam.MODULATION_ENABLE, TonexParamStatus.Disable
+        )
+        controller.send_single_parameter(
+            TonexParam.MODULATION_MODEL, ModulationModel.Chrous
+        )
 
-        # controller.send_single_parameter(TonexParam.NOISE_GATE_ENABLE, 1)
-        # controller.send_single_parameter(TonexParam.NOISE_GATE_ENABLE, 0)
-        # controller.send_single_parameter(TonexParam.MODULATION_ENABLE, 1)
-        # controller.send_single_parameter(TonexParam.MODULATION_ENABLE, 0)
-        # controller.send_single_parameter(TonexParam.MODULATION_ENABLE, 1)
-        # controller.send_single_parameter(TonexParam.MODULATION_ENABLE, 0)
-
-    except KeyboardInterrupt:
-        print("\nStopping slot cycling")
     except Exception as e:
         print(f"Error: {str(e)}")
-    finally:
-        controller.disconnect()
+    controller.disconnect()
 
 
 if __name__ == "__main__":

@@ -5,7 +5,8 @@ import random
 def test_noise_gate_on():
     controller = pytonexcontrol.TonexOneController()
     message = controller.prepare_message_single_parameter(
-        pytonexcontrol.TonexParam.NOISE_GATE_ENABLE, 1
+        pytonexcontrol.TonexParam.NOISE_GATE_ENABLE,
+        pytonexcontrol.TonexParamStatus.Enable,
     )
     # fmt: off
     assert message == bytearray([0x7E, 0xB9, 0x03, 0x81, 0x09, 0x03, 0x82, 0x0A,
@@ -17,7 +18,8 @@ def test_noise_gate_on():
 def test_noise_gate_off():
     controller = pytonexcontrol.TonexOneController()
     message = controller.prepare_message_single_parameter(
-        pytonexcontrol.TonexParam.NOISE_GATE_ENABLE, 0
+        pytonexcontrol.TonexParam.NOISE_GATE_ENABLE,
+        pytonexcontrol.TonexParamStatus.Disable,
     )
     # fmt: off
     assert message == bytearray([0x7E, 0xB9, 0x03, 0x81, 0x09, 0x03, 0x82, 0x0A,
